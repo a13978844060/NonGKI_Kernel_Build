@@ -1,4 +1,4 @@
-name: Build Kernel oppofindx2pro (COS15.0) with KSU and SUSFS
+name: Build Kernel oppofindx2pro (COS15.0) with KSU
 on:
   workflow_call:
   workflow_dispatch:
@@ -153,28 +153,6 @@ jobs:
           echo "FIRST_VERSION=$(echo "$KERNEL_VERSION" | awk -F '.' '{print $1}')" >> $GITHUB_ENV
           echo "SECOND_VERSION=$(echo "$KERNEL_VERSION" | awk -F '.' '{print $2}')" >> $GITHUB_ENV
 
-      - name: Set KSU and SUSFS for DEFCONFIG
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-          if [[ ${{ env.SUSFS_ENABLE }} == "true" ]]; then
-            echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "# CONFIG_KSU_SUSFS_SUS_OVERLAYFS is not set" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-            echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-          fi
-
       - name: Set Anykernel3 and KernelSU and Others
         run: |
           # Variable
@@ -188,12 +166,6 @@ jobs:
           curl -sSL ${{ env.KERNELSU_SOURCE }} | bash -s ${{ env.KERNELSU_BRANCH }}
           KSU_VERSION=$(cd ${{ env.KERNELSU_NAME }} && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
           echo "UPLOADNAME=-${{ env.KERNELSU_NAME }}_$KSU_VERSION" >> $GITHUB_ENV
-
-          # Set SUSFS
-          git clone $SUSFS_SOURCE -b $SUSFS_BRANCH susfs4ksu --depth=1
-          git clone https://github.com/JackA1ltman/NonGKI_Kernel_Patches.git -b op_kernel NonGKI_Kernel_Patches --depth=1
-          cp susfs4ksu/kernel_patches/fs/* fs/
-          cp susfs4ksu/kernel_patches/include/linux/* include/linux/
 
       - name: Patch Kernel for no-kprobe
         run: |
